@@ -1,55 +1,48 @@
-gem 'minitest', '~> 5.0'
-require 'csv'
+gem 'minitest', '~> 5.2'
 require 'minitest/autorun'
 require 'minitest/pride'
-require './lib/db'
-require './lib/entry'
-require './lib/entry_repository'
+require_relative '../lib/db'
+require_relative '../lib/person'
+require_relative '../lib/phone_number'
+require_relative '../lib/entry'
+require_relative '../lib/entry_repository'
 
 class EntryRepositoryTest < Minitest::Test
-  class FakePerson < Struct.new(:id, :first_name, :last_name)
-  end
-
-  class FakeNumber < Struct.new(:person_id, :to_s)
+  def people_data
+    [
+      { id: "1", first_name: "Alice", last_name: "Smith" },
+      { id: "2", first_name: "Bob", last_name: "Smith" },
+      { id: "3", first_name: "Charlie", last_name: "Jones" }
+    ].map {|row| Person.new(row)}
   end
 
   def people
-    [
-      FakePerson.new(1, "Alice", "Smith"),
-      FakePerson.new(2, "Bob", "Smith"),
-      FakePerson.new(3, "Charlie", "Jones")
-    ]
+    DB.new(people_data)
   end
 
-  def numbers
+  def phone_numbers_data
     [
-      FakeNumber.new(1, "123"),
-      FakeNumber.new(1, "456"),
-      FakeNumber.new(2, "789")
-    ]
+      { person_id: "1", phone_number: "111.111.1111" },
+      { person_id: "1", phone_number: "111.111.2222" },
+      { person_id: "2", phone_number: "222-222-1111" }
+    ].map {|row| PhoneNumber.new(row)}
   end
 
-  def repo
-    @repo ||= EntryRepository.new(DB.new(people), DB.new(numbers))
+  def phone_numbers
+    DB.new(phone_numbers_data)
+  end
+
+  def repository
+    @repository ||= EntryRepository.new(people, phone_numbers)
   end
 
   def test_find_by_last_name
-    entries = repo.find_by_last_name("Smith")
-    assert_equal 2, entries.size
-    assert_equal ["Alice", "Bob"], entries.map(&:first_name)
-  end
-
-  def test_find_by_first_and_last_name
-    entries = repo.find_by_first_and_last_name("Alice", "Smith")
-    assert_equal 1, entries.size
-    assert_equal "Alice Smith", entries.first.name
-  end
-
-  def test_find_by_number
-    entries = repo.find_by_number("123")
-    assert_equal 1, entries.size
-    entry = entries.first
-    assert_equal "Alice Smith", entry.name
-    assert_equal ["123", "456"], entry.numbers
+    entries = repository.find_by_last_name("Smith").sort_by {|e| e.first_name}
+    assert_equal 2, entries.length
+    alice, bob = entries
+    assert_equal "Alice Smith", alice.name
+    assert_equal ["(111) 111-1111", "(111) 111-2222"], alice.numbers
+    assert_equal "Bob Smith", bob.name
+    assert_equal ["(222) 222-1111"], bob.numbers
   end
 end

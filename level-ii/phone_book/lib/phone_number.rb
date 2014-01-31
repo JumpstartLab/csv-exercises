@@ -2,7 +2,7 @@ class PhoneNumber
   attr_reader :person_id
 
   def initialize(data)
-    @person_id = data[:person_id].to_i
+    @person_id = data[:person_id]
     @input = data[:phone_number]
   end
 

@@ -1,10 +1,10 @@
 class DB
-  def self.read(file, target)
-    data = CSV.open(file, headers: true, header_converters: :symbol)
-    rows = data.map do |row|
-      target.new(row)
-    end
-    new(rows)
+  def self.read(filename, klass)
+    rows = CSV.open(filename, headers: true, header_converters: :symbol)
+    objects = rows.map {|row|
+      klass.new(row)
+    }
+    new objects
   end
 
   attr_reader :objects
@@ -13,8 +13,6 @@ class DB
   end
 
   def find_by(attribute, value)
-    objects.select do |object|
-      object.send(attribute) == value
-    end
+    objects.select {|object| object.send(attribute) == value}
   end
 end
