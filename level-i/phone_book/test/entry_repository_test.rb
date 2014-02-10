@@ -26,4 +26,20 @@ class EntryRepositoryTest < Minitest::Test
     assert_equal "Bob Smith", bob.name
     assert_equal "222.222.2222", bob.phone_number
   end
+
+  def test_find_by_first_and_last_name
+    entries = repository.find_by_first_and_last_name("Bob", "Smith")
+    assert_equal 1, entries.length
+    bob = entries.first
+    assert_equal "Bob Smith", bob.name
+    assert_equal "222.222.2222", bob.phone_number
+  end
+
+  def test_find_by_number
+    entries = repository.find_by_number("222.222.2222")
+    assert_equal 1, entries.length
+    bob = entries.first
+    assert_equal "Bob Smith", bob.name
+    assert_equal "222.222.2222", bob.phone_number
+  end
 end
